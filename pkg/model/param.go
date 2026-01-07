@@ -23,7 +23,7 @@ func CreateParams(params map[string]string) ([]Param, error) {
 	tx := DB.Begin()
 	for key, value := range params {
 		var param Param
-		if result := DB.Where(Param{Key: key, Value: value}).FirstOrCreate(&param); result.Error != nil {
+		if result := tx.Where(Param{Key: key, Value: value}).FirstOrCreate(&param); result.Error != nil {
 			tx.Rollback()
 			return nil, result.Error
 		}

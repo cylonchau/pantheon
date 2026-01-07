@@ -183,8 +183,8 @@ func printTable(targets []target.TargetList, showLabels bool, showParams bool) e
 
 	// 遍历每个 target，计算每列中最长的宽度
 	for _, target := range targets {
-		if len(string(target.ID)) > maxIDWidth {
-			maxIDWidth = len(string(target.ID))
+		if len(fmt.Sprintf("%d", target.ID)) > maxIDWidth {
+			maxIDWidth = len(fmt.Sprintf("%d", target.ID))
 		}
 		if len(target.Address) > maxAddressWidth {
 			maxAddressWidth = len(target.Address)

@@ -13,68 +13,66 @@ import (
 	"github.com/cylonchau/pantheon/pkg/model"
 )
 
-func Upgrade(driver string) error {
+func Upgrade(driver string) (enconterError error) {
 	if driver == "" {
 		return errors.New("Unknown database driver")
 	}
-	var (
-		dbInterface   *gorm.DB
-		enconterError error
-	)
+	var dbInterface *gorm.DB
 	switch driver {
 	case "mysql":
 		if dbInterface, enconterError = MySQL(); enconterError == nil {
 			// 检查数据库是否存在，如果不存在则创建数据库
-			if err := createDatabaseIfNotExists(dbInterface); err != nil {
-				return err
+			if enconterError = createDatabaseIfNotExists(dbInterface); enconterError != nil {
+				return
 			}
 			// 执行迁移
-			if err := upgradeMigrate(dbInterface); err != nil {
-				return err
+			if enconterError = upgradeMigrate(dbInterface); enconterError != nil {
+				return
 			}
 		}
 		return enconterError
 	case "sqlite":
 		if dbInterface, enconterError = SQLite(); enconterError == nil {
-			if err := upgradeMigrate(dbInterface); err != nil {
-				return err
+			if enconterError = upgradeMigrate(dbInterface); enconterError != nil {
+				return
 			}
 		}
 		return nil
+	default:
+		enconterError = errors.New("UnknownDriver")
 	}
 	return enconterError
 }
 
-func Migrate(driver string) error {
+func Migrate(driver string) (enconterError error) {
 	if driver == "" {
-		return errors.New("Unknown database driver")
+		enconterError = errors.New("Unknown database driver")
+		return
 	}
-	var (
-		dbInterface   *gorm.DB
-		enconterError error
-	)
+	var dbInterface *gorm.DB
+
 	switch driver {
 	case "mysql":
 		if dbInterface, enconterError = MySQL(); enconterError == nil {
 			// 检查数据库是否存在，如果不存在则创建数据库
-			if err := createDatabaseIfNotExists(dbInterface); err != nil {
-				return err
+			if enconterError = createDatabaseIfNotExists(dbInterface); enconterError != nil {
+				return
 			}
 			// 执行迁移
-			if err := autoMigrate(dbInterface); err != nil {
-				return err
+			if enconterError = autoMigrate(dbInterface); enconterError != nil {
+				return
 			}
 		}
 		return enconterError
 	case "sqlite":
 		if dbInterface, enconterError = SQLite(); enconterError == nil {
-			if err := autoMigrate(dbInterface); err != nil {
-				return err
+			if enconterError = autoMigrate(dbInterface); enconterError != nil {
+				return
 			}
 		}
-		return nil
+		return
 	}
-	return enconterError
+	return nil
 }
 
 func createDatabaseIfNotExists(dbInterface *gorm.DB) error {
@@ -83,46 +81,46 @@ func createDatabaseIfNotExists(dbInterface *gorm.DB) error {
 	return dbInterface.Exec(sql).Error
 }
 
-func upgradeMigrate(dbInterface *gorm.DB) error {
+func upgradeMigrate(dbInterface *gorm.DB) (enconterError error) {
 
-	if err := dbInterface.AutoMigrate(&model.Target{}); err != nil {
-		return err
+	if enconterError = dbInterface.AutoMigrate(&model.Target{}); enconterError != nil {
+		return
 	}
 
-	if err := dbInterface.AutoMigrate(&model.Selector{}); err != nil {
-		return err
+	if enconterError = dbInterface.AutoMigrate(&model.Selector{}); enconterError != nil {
+		return
 	}
 
-	if err := dbInterface.AutoMigrate(&model.Param{}); err != nil {
-		return err
+	if enconterError = dbInterface.AutoMigrate(&model.Param{}); enconterError != nil {
+		return
 	}
 
-	if err := dbInterface.AutoMigrate(&model.Label{}); err != nil {
-		return err
+	if enconterError = dbInterface.AutoMigrate(&model.Label{}); enconterError != nil {
+		return
 	}
 
 	return nil
 }
 
-func autoMigrate(dbInterface *gorm.DB) error {
+func autoMigrate(dbInterface *gorm.DB) (enconterError error) {
 	if !dbInterface.Migrator().HasTable(&model.Target{}) {
-		if err := dbInterface.AutoMigrate(&model.Target{}); err != nil {
-			return err
+		if enconterError = dbInterface.AutoMigrate(&model.Target{}); enconterError != nil {
+			return
 		}
 	}
 	if !dbInterface.Migrator().HasTable(&model.Selector{}) {
-		if err := dbInterface.AutoMigrate(&model.Selector{}); err != nil {
-			return err
+		if enconterError = dbInterface.AutoMigrate(&model.Selector{}); enconterError != nil {
+			return
 		}
 	}
 	if !dbInterface.Migrator().HasTable(&model.Param{}) {
-		if err := dbInterface.AutoMigrate(&model.Param{}); err != nil {
-			return err
+		if enconterError = dbInterface.AutoMigrate(&model.Param{}); enconterError != nil {
+			return
 		}
 	}
 	if !dbInterface.Migrator().HasTable(&model.Label{}) {
-		if err := dbInterface.AutoMigrate(&model.Label{}); err != nil {
-			return err
+		if enconterError = dbInterface.AutoMigrate(&model.Label{}); enconterError != nil {
+			return
 		}
 	}
 	return nil
