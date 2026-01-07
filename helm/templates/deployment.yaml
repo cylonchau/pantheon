@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.labels.app }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}  # Common labels
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        {{- range $key, $value := .Values.nodeSelector.selectors }}
+          {{ $key }}: {{ $value }}                     # Node selector for pod placement
+          {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.labels.app }}-container
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Values.labels.app }}-config-volume
+              mountPath: /etc/pantheon
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}
+      volumes:
+        - name: {{ .Values.labels.app }}-config-volume
+          configMap:
+            name: {{ .Values.labels.app }}-config

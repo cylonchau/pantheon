@@ -1,0 +1,11 @@
+appname = "pantheon-server"
+port = 8899
+address = "0.0.0.0"
+database_driver = "sqlite"
+proxy_address = "http://10.0.0.1:8899/ph/v1/proxy"
+
+[sqlite]
+file = "sqlite/ph-db"
+database = "ph-db"
+max_open_connection = 100
+max_idle_connection = 100

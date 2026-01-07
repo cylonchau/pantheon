@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.labels.app }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}  # Common labels
+data:
+  config.toml: |
+    appname = "{{ .Values.config.appname }}"
+    port = {{ .Values.config.port }}
+    address = "{{ .Values.config.address }}"
+    database_driver = "{{ .Values.config.database_driver }}"
+    proxy_address = "{{ .Values.config.proxy_address }}"
+    proxy_timeout = "{{ .Values.config.proxy_timeout }}"
+
+    [mysql]
+    ip = "{{ .Values.config.mysql.ip }}"
+    port = {{ .Values.config.mysql.port }}
+    user = "{{ .Values.config.mysql.user }}"
+    password = "{{ .Values.config.mysql.password }}"
+    database = "{{ .Values.config.mysql.database }}"
+    max_open_connection = {{ .Values.config.mysql.max_open_connection }}
+    max_idle_connection = {{ .Values.config.mysql.max_idle_connection }}

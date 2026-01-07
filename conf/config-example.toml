@@ -1,0 +1,20 @@
+appname = "pantheon-server"
+port = 8899
+address = "0.0.0.0"
+database_driver = "mysql"
+proxy_address = "localhost:9200"
+
+[mysql]
+ip = "127.0.0.1"
+port = 3306
+user = "root"
+password = 111
+database = "cmp"
+max_open_connection = 100
+max_idle_connection = 100
+
+[sqlite]
+file = "ph-db"
+database = "ph-db"
+max_open_connection = 100
+max_idle_connection = 100

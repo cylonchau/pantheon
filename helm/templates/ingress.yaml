@@ -1,0 +1,76 @@
+{{- if .Values.ingress.enabled }}
+{{- if eq .Values.ingress.version "v1beta1" }}
+  # Ingress resource for v1beta1
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.labels.app }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+  annotations:
+{{- if and (ge .Values.k8s.version "1.16") (lt .Values.k8s.version "1.18") }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.class }}
+{{- end }}
+    nginx.ingress.kubernetes.io/proxy-body-size: 15m
+spec:
+{{- if ge .Values.k8s.version "1.18" }}
+  ingressClassName: {{ .Values.ingress.class }}
+{{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.path }}
+{{- if not (and (ge .Values.k8s.version "1.16") (le .Values.k8s.version "1.18")) }}
+            pathType: Prefix
+{{- end }}
+            backend:
+              serviceName: {{ .Values.labels.app }}-svc
+              servicePort: {{ .Values.service.port }}  # Service port
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+  - hosts:
+      # TLS host
+      - {{ .Values.ingress.host }}
+    # Secret name for TLS
+    secretName: {{ .Values.ingress.tls.secretName }}
+{{- end }}
+
+{{- else if eq .Values.ingress.version "v1" }}
+  # Ingress resource for v1
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.labels.app }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}  # Common labels
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 15m
+spec:
+  ingressClassName: {{ .Values.ingress.class }}
+  rules:
+    # Host for the ingress
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          # Path for the ingress
+          - path: {{ .Values.ingress.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.labels.app }}-svc
+                port:
+                  # Service port
+                  number: {{ .Values.service.port }}
+{{- if .Values.ingress.tls.enabled }}
+tls:
+  - hosts:
+      # TLS host
+      - {{ .Values.ingress.host }}
+      # Secret name for TLS
+    secretName: {{ .Values.ingress.tls.secretName }}
+{{- end }}
+{{- end }}
+{{- end }}

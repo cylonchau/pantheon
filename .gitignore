@@ -1,0 +1,70 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+# vendor/
+
+# Project specific
+pantheon
+_output/
+example/
+*.db
+*.db*
+main
+pantheon1
+pantheon1/**
+
+# IDE / Editor
+.idea/
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Documentation build
+doc/
+
+# Debian build artifacts
+/debian/process-exporter/
+/debian/.debhelper/
+/debian/files
+/debian/*.debhelper*
+/debian/*.substvars
+
+# RPM build artifacts
+rpmbuild/
+
+# Parent directory artifacts
+../*.deb
+../*.rpm
+../*.buildinfo
+../*.changes
+
+# Rust build/cache
+**/target/
+**/.cargo/
+**/.rustup/
+**/clippy.toml
+**/rustfmt.toml
+
+# Temporary / Environment
+.env
+.venv
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Distribution
+/dist/

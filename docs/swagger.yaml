@@ -1,0 +1,445 @@
+basePath: /
+definitions:
+  github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta:
+    properties:
+      kind:
+        type: string
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector:
+    properties:
+      new_key:
+        description: 新键
+        type: string
+      new_value:
+        description: 新值
+        type: string
+      old_key:
+        description: 源键
+        type: string
+      old_value:
+        description: 源值
+        type: string
+    required:
+    - new_key
+    - new_value
+    - old_key
+    - old_value
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_query.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_target.Target:
+    properties:
+      kind:
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta'
+      selectors:
+        additionalProperties:
+          type: string
+        type: object
+      targets:
+        items:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetItem'
+        type: array
+    required:
+    - selectors
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth:
+    properties:
+      base:
+        type: string
+      bearer_token:
+        type: string
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_target.TargetChg:
+    properties:
+      address:
+        type: string
+      auth:
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth'
+      metric_path:
+        type: string
+      scrape_time:
+        type: integer
+      scrape_timeout:
+        type: integer
+    type: object
+  github_com_cylonchau_pantheon_pkg_apis_target.TargetItem:
+    properties:
+      address:
+        type: string
+      auth:
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth'
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      metric_path:
+        type: string
+      params:
+        additionalProperties:
+          type: string
+        type: object
+      scrape_time:
+        type: integer
+      scrape_timeout:
+        type: integer
+    required:
+    - address
+    type: object
+  github_com_cylonchau_pantheon_pkg_model.TargetRaw:
+    properties:
+      address:
+        type: string
+      base_auth:
+        type: string
+      bearer_token:
+        type: string
+      metric_path:
+        type: string
+      schema:
+        type: string
+      scrape_time:
+        type: integer
+      scrape_timeout:
+        type: integer
+    type: object
+host: localhost:8899
+info:
+  contact: {}
+  description: Prometheus hub, distrubed prometheus targent manager.
+  title: Prometheus Hub API
+  version: 0.0.9
+paths:
+  /ph/v1/proxy:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint proxies requests to another server.
+      parameters:
+      - description: Protocol (http/https)
+        in: query
+        name: schema
+        required: true
+        type: string
+      - description: Host to proxy to
+        in: query
+        name: host
+        required: true
+        type: string
+      - description: Port to proxy to
+        in: query
+        name: port
+        required: true
+        type: string
+      - description: Basic auth credentials
+        in: query
+        name: base
+        type: string
+      - description: Bearer token for authentication
+        in: query
+        name: bearer
+        type: string
+      - description: Additional parameter 1
+        in: query
+        name: param1
+        type: string
+      - description: Additional parameter 2
+        in: query
+        name: param2
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Reverse Proxy
+      tags:
+      - Proxy
+  /ph/v1/selectors:
+    get:
+      consumes:
+      - application/json
+      description: List selectors
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: List selectors
+      tags:
+      - Selectors
+    post:
+      consumes:
+      - application/json
+      description: Update selector by old key and value
+      parameters:
+      - description: Update Selector Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response'
+      summary: Update selector
+      tags:
+      - Selectors
+  /ph/v1/targets:
+    delete:
+      consumes:
+      - application/json
+      description: Create prometheus target.
+      parameters:
+      - description: body
+        in: body
+        name: query
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Create prometheus target.
+      tags:
+      - Targets
+    put:
+      consumes:
+      - application/json
+      description: Create prometheus target.
+      parameters:
+      - description: body
+        in: body
+        name: query
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Create prometheus target.
+      tags:
+      - Targets
+  /ph/v1/targets/{id}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Remove prometheus target target id.
+      parameters:
+      - description: target id
+        in: path
+        name: name
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Remove prometheus target with target id.
+      tags:
+      - Targets
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a target using its ID
+      parameters:
+      - description: Target ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_model.TargetRaw'
+      summary: Get a target by ID
+      tags:
+      - Targets
+    post:
+      consumes:
+      - application/json
+      description: Update prometheus instance target id with provided parameters.
+      parameters:
+      - description: target id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Target update information
+        in: body
+        name: target
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetChg'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Update prometheus target with target id.
+      tags:
+      - Targets
+  /ph/v1/targets/clean:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Remove all targets where is_del = 1.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Clean all targets marked as deleted.
+      tags:
+      - Targets
+  /ph/v1/targets/cmd/{key}/{value}:
+    get:
+      consumes:
+      - application/json
+      description: List target with instance labels
+      parameters:
+      - description: label key name
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: label value name
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: List target with instance labels
+      tags:
+      - Targets
+  /ph/v1/targets/name/{name}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Remove prometheus target with name.
+      parameters:
+      - description: target name
+        in: path
+        name: name
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Remove prometheus target with name.
+      tags:
+      - Targets
+  /ph/v1/targets/selector/{key}/{value}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Remove target instance with name.
+      parameters:
+      - description: target name
+        in: path
+        name: name
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: Remove prometheus target with name.
+      tags:
+      - Targets
+    get:
+      consumes:
+      - application/json
+      description: List target with instance labels
+      parameters:
+      - description: selector key name
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: selector value name
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: List target with instance labels
+      tags:
+      - Targets
+  /ph/v2/targets/selector/{key}/{value}:
+    get:
+      consumes:
+      - application/json
+      description: List target with instance labels
+      parameters:
+      - description: selector key name
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: selector value name
+        in: path
+        name: value
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      summary: List target with instance labels
+      tags:
+      - Targets
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

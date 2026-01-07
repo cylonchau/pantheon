@@ -1,0 +1,671 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Prometheus hub, distrubed prometheus targent manager.",
+        "title": "Prometheus Hub API",
+        "contact": {},
+        "version": "0.0.9"
+    },
+    "host": "localhost:8899",
+    "basePath": "/",
+    "paths": {
+        "/ph/v1/proxy": {
+            "get": {
+                "description": "This endpoint proxies requests to another server.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Proxy"
+                ],
+                "summary": "Reverse Proxy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Protocol (http/https)",
+                        "name": "schema",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Host to proxy to",
+                        "name": "host",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Port to proxy to",
+                        "name": "port",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Basic auth credentials",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer token for authentication",
+                        "name": "bearer",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Additional parameter 1",
+                        "name": "param1",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Additional parameter 2",
+                        "name": "param2",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/selectors": {
+            "get": {
+                "description": "List selectors",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Selectors"
+                ],
+                "summary": "List selectors",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Update selector by old key and value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Selectors"
+                ],
+                "summary": "Update selector",
+                "parameters": [
+                    {
+                        "description": "Update Selector Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets": {
+            "put": {
+                "description": "Create prometheus target.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Create prometheus target.",
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "query",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Create prometheus target.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Create prometheus target.",
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "query",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets/clean": {
+            "delete": {
+                "description": "Remove all targets where is_del = 1.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Clean all targets marked as deleted.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets/cmd/{key}/{value}": {
+            "get": {
+                "description": "List target with instance labels",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "List target with instance labels",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "label key name",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "label value name",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets/name/{name}": {
+            "delete": {
+                "description": "Remove prometheus target with name.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Remove prometheus target with name.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "target name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets/selector/{key}/{value}": {
+            "get": {
+                "description": "List target with instance labels",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "List target with instance labels",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "selector key name",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "selector value name",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove target instance with name.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Remove prometheus target with name.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "target name",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/targets/{id}": {
+            "get": {
+                "description": "Retrieve a target using its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Get a target by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Target ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_model.TargetRaw"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Update prometheus instance target id with provided parameters.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Update prometheus target with target id.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Target update information",
+                        "name": "target",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetChg"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove prometheus target target id.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "Remove prometheus target with target id.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target id",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v2/targets/selector/{key}/{value}": {
+            "get": {
+                "description": "List target with instance labels",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Targets"
+                ],
+                "summary": "List target with instance labels",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "selector key name",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "selector value name",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector": {
+            "type": "object",
+            "required": [
+                "new_key",
+                "new_value",
+                "old_key",
+                "old_value"
+            ],
+            "properties": {
+                "new_key": {
+                    "description": "新键",
+                    "type": "string"
+                },
+                "new_value": {
+                    "description": "新值",
+                    "type": "string"
+                },
+                "old_key": {
+                    "description": "源键",
+                    "type": "string"
+                },
+                "old_value": {
+                    "description": "源值",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_query.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_target.Target": {
+            "type": "object",
+            "required": [
+                "selectors"
+            ],
+            "properties": {
+                "kind": {
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta"
+                },
+                "selectors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetItem"
+                    }
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "bearer_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_target.TargetChg": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "auth": {
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth"
+                },
+                "metric_path": {
+                    "type": "string"
+                },
+                "scrape_time": {
+                    "type": "integer"
+                },
+                "scrape_timeout": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_apis_target.TargetItem": {
+            "type": "object",
+            "required": [
+                "address"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "auth": {
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "metric_path": {
+                    "type": "string"
+                },
+                "params": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "scrape_time": {
+                    "type": "integer"
+                },
+                "scrape_timeout": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_model.TargetRaw": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "base_auth": {
+                    "type": "string"
+                },
+                "bearer_token": {
+                    "type": "string"
+                },
+                "metric_path": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                },
+                "scrape_time": {
+                    "type": "integer"
+                },
+                "scrape_timeout": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
