@@ -25,6 +25,8 @@ example/
 main
 pantheon1
 pantheon1/**
+pantheonctl
+pantheon-server
 
 # IDE / Editor
 .idea/
