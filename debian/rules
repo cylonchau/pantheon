@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	GOOS=linux GOARCH=amd64 make build module=pantheonctl
+
+override_dh_auto_test:
+	# Skip tests in packaging
+	true
+
+override_dh_auto_install:
+	# Use debian/install
+	true

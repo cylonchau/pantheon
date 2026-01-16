@@ -4,7 +4,7 @@
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOBUILD_DIR=cmd
-OUT_DIR ?= _output
+OUT_DIR ?= target
 BIN_DIR := $(OUT_DIR)/bin
 
 # 定义目标
@@ -12,6 +12,14 @@ modules := $(wildcard $(GOBUILD_DIR)/*)
 
 # 从子目录中提取目标名称
 SUBDIRS := $(notdir $(modules))
+
+all:
+	@for dir in $(SUBDIRS); do \
+		echo "Building module $$dir..."; \
+		scripts/build.sh $$dir; \
+	done
+
+makeall: all
 
 build:
 	@if [ -z "$(module)" ]; then \
@@ -35,8 +43,9 @@ clean:
 help:
 	@echo "Available commands:"
 	@echo "  make build module=<subdir>  # Build the specified module"
-	@echo "  make clean                   # Clean output directory"
-	@echo "  make help                    # Show this help message"
+	@echo "  make all                    # Build all modules"
+	@echo "  make clean                  # Clean output directory"
+	@echo "  make help                   # Show this help message"
 	@echo ""
 	@echo "Example:"
 	@for dir in $(SUBDIRS); do \

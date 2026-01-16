@@ -13,7 +13,7 @@ import (
 )
 
 // @title Pantheon server
-// @version 0.0.9
+// @version v0.0.0-dev
 // @description Prometheus hub, distrubed prometheus targent manager.
 
 // @securityDefinitions.apikey Bearer
@@ -21,7 +21,6 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 
-// @host localhost:8899
 // @BasePath /
 // @schemes http
 func main() {

@@ -5,13 +5,20 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/cylonchau/pantheon/docs"
 	v1Proxy "github.com/cylonchau/pantheon/pkg/server/v1/proxy"
 	v1Selector "github.com/cylonchau/pantheon/pkg/server/v1/selector"
 	v1Target "github.com/cylonchau/pantheon/pkg/server/v1/target"
 	v2Target "github.com/cylonchau/pantheon/pkg/server/v2/target"
+	"github.com/cylonchau/pantheon/pkg/version"
 )
 
 func RegisteredRouter(e *gin.Engine) {
+	// 动态设置 Swagger version 和 host
+	docs.SwaggerInfo.Version = version.Version
+	// 清空 Swagger host，让 Swagger UI 自动使用当前访问域名
+	docs.SwaggerInfo.Host = ""
+
 	phAPIGroup := e.Group("/ph")
 	phv1Group := phAPIGroup.Group("/v1")
 	phv2Group := phAPIGroup.Group("/v2")

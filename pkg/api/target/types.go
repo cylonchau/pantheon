@@ -6,7 +6,8 @@ import (
 
 type Target struct {
 	*metav1.TypeMeta `form:"kind,omitempty" json:"kind,omitempty" yaml:"kind,omitempty"`
-	Targets          []TargetItem      `form:"targets" json:"targets"`
+	Addresses        []string          `json:"addresses,omitempty" yaml:"addresses,omitempty"`
+	Targets          []TargetItem      `form:"targets" json:"targets" yaml:"targets"`
 	InstanceSelector map[string]string `json:"selectors" yaml:"selectors" binding:"required"`
 }
 
