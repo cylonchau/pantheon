@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 var label_table_name = "labels"
 
@@ -25,7 +29,7 @@ func CreateLabels(labels map[string]string) ([]Label, error) {
 	tx := DB.Begin()
 	for key, value := range labels {
 		var label Label
-		if result := DB.Where(Label{Key: key, Value: value}).FirstOrCreate(&label); result.Error != nil {
+		if result := tx.Where(Label{Key: strings.ToLower(strings.TrimSpace(key)), Value: strings.TrimSpace(value)}).FirstOrCreate(&label); result.Error != nil {
 			tx.Rollback()
 			return nil, result.Error
 		}
@@ -39,7 +43,7 @@ func GetLabelsWithLabels(labels map[string]string) ([]Label, error) {
 	var createdLabels []Label
 	for key, value := range labels {
 		var label Label
-		result := DB.Where(Label{Key: key, Value: value}).Find(&label)
+		result := DB.Where(Label{Key: strings.ToLower(strings.TrimSpace(key)), Value: strings.TrimSpace(value)}).Find(&label)
 		if result.Error != nil {
 			if result.Error != gorm.ErrRecordNotFound {
 				continue

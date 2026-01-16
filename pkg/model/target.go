@@ -102,7 +102,7 @@ func (t *Target) BeforeDelete(tx *gorm.DB) (err error) {
 							Find(nil)
 		if paramsCount.RowsAffected == 0 {
 			if err := tx.Delete(&param).Error; err != nil {
-				klog.V(4).Infof("Error deleting param:", err)
+				klog.V(4).Infof("Error deleting param: %v", err)
 				return err
 			}
 		}
@@ -127,7 +127,7 @@ func (t *Target) BeforeDelete(tx *gorm.DB) (err error) {
 							Find(nil)
 		if labelsCount.RowsAffected == 0 {
 			if err := tx.Delete(&label).Error; err != nil {
-				klog.V(4).Infof("Error deleting label:", err)
+				klog.V(4).Infof("Error deleting label: %v", err)
 				return err
 			}
 		}
@@ -150,7 +150,7 @@ func (t *Target) BeforeDelete(tx *gorm.DB) (err error) {
 							Find(nil)
 		if selectorCount.RowsAffected == 0 {
 			if err := tx.Delete(&selector).Error; err != nil {
-				klog.V(4).Infof("Error deleting selector:", err)
+				klog.V(4).Infof("Error deleting selector: %v", err)
 				return err
 			}
 		}
@@ -605,7 +605,7 @@ func ListTargetWithCtl(query *query.QueryWithLabel) (results []target.TargetList
 	targetResults := map[string]target.TargetList{}
 	for _, rawTarget := range targets {
 		paramsString := mapToURLParams(paramsMap[int(rawTarget.ID)])
-		uniqueKey := hex.EncodeToString(md5.New().Sum([]byte(fmt.Sprintf("%://%s%s?%s", rawTarget.Schema, rawTarget.Address, rawTarget.MetricPath, paramsString))))
+		uniqueKey := hex.EncodeToString(md5.New().Sum([]byte(fmt.Sprintf("%s://%s%s?%s", rawTarget.Schema, rawTarget.Address, rawTarget.MetricPath, paramsString))))
 
 		targetResult := target.TargetList{
 			ID:            rawTarget.ID,
@@ -704,7 +704,7 @@ func ListTargetWithSelector(query *query.QueryWithLabel) (results []TargetList, 
 	targetResults := make(map[string]TargetList)
 	for _, target := range targets {
 		paramsString := mapToURLParams(paramsMap[int(target.ID)])
-		uniqueKey := hex.EncodeToString(md5.New().Sum([]byte(fmt.Sprintf("%://%s%s?%s", target.Schema, target.Address, target.MetricPath, paramsString))))
+		uniqueKey := hex.EncodeToString(md5.New().Sum([]byte(fmt.Sprintf("%s://%s%s?%s", target.Schema, target.Address, target.MetricPath, paramsString))))
 
 		var targetResult TargetList
 		if target.BearerToken != "" || target.BaseAuth != "" {

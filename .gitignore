@@ -51,13 +51,6 @@ rpmbuild/
 ../*.buildinfo
 ../*.changes
 
-# Rust build/cache
-**/target/
-**/.cargo/
-**/.rustup/
-**/clippy.toml
-**/rustfmt.toml
-
 # Temporary / Environment
 .env
 .venv
