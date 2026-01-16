@@ -74,10 +74,12 @@ func NewPantheonctlCommand(o PantheonctlOptions) *cobra.Command {
 	targetCmd := target.NewCmdTarget()
 	configCmd := config.NewCmdConfig()
 	selectorCmd := selector.NewCmdselector()
+	versionCmd := NewCmdVersion()
 	rootCmd.AddCommand(
 		targetCmd,
 		configCmd,
 		selectorCmd,
+		versionCmd,
 	)
 	return rootCmd
 }

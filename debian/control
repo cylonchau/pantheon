@@ -1,0 +1,15 @@
+Source: pantheon
+Section: utils
+Priority: optional
+Maintainer: cylonchau <cylonchau@outlook.com>
+Build-Depends: debhelper-compat (= 13), golang-go (>= 1.22)
+Standards-Version: 4.6.0
+Homepage: https://github.com/cylonchau/pantheon
+Rules-Requires-Root: no
+
+Package: pantheonctl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Pantheon CLI tool
+  Pantheon is a distributed prometheus target manager.
+  This package contains the command line interface.

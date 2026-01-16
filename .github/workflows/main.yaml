@@ -1,0 +1,252 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    name: Build DEB packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - { name: ubuntu, version: "22.04" }
+          - { name: ubuntu, version: "24.04" }
+          - { name: debian, version: "11" }
+          - { name: debian, version: "12" }
+          - { name: debian, version: "13" }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag or use default
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Building version $VERSION from tag"
+          else
+            VERSION="0.0.0"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Building version $VERSION from default"
+          fi
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper devscripts dpkg-dev upx build-essential
+
+      - name: Update changelog with release content
+        run: |
+          # Configure git for dch
+          git config user.email "ci@github.com"
+          git config user.name "GitHub Actions"
+
+          # Use dch to create a new changelog entry with the version
+          # We use "Release <version>" as the content, matching typical release usage
+          rm -f debian/changelog
+          dch --create --package pantheon -v "${{ steps.version.outputs.version }}-1" --distribution unstable "Release ${{ steps.version.outputs.version }}"
+
+          # Display for verification
+          head -n 10 debian/changelog
+
+      - name: Build DEB package
+        run: dpkg-buildpackage -us -uc -b -d
+
+      - name: Build pantheon-server-amd64
+        if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
+        run: |
+          GOOS=linux GOARCH=amd64 make build module=pantheon-server
+          mv target/pantheon-server target/pantheon-server-linux-amd64
+
+      - name: Move packages
+        run: |
+          mkdir -p dist/deb
+          for deb in ../*.deb; do
+            if [ -f "$deb" ]; then
+              # Create new name: pantheonctl_0.1.1-1_amd64-ubuntu22.04.deb
+              newname="pantheonctl_${{ steps.version.outputs.version }}_amd64-${{ matrix.os.name }}${{ matrix.os.version }}.deb"
+              mv "$deb" "dist/deb/$newname"
+            fi
+          done
+          mv ../*.buildinfo dist/deb/ 2>/dev/null || true
+          mv ../*.changes dist/deb/ 2>/dev/null || true
+
+      - name: Upload DEB packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.os.name }}-${{ matrix.os.version }}
+          path: dist/deb/*.deb
+
+      - name: Upload pantheon-server-amd64
+        if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pantheon-server-linux-amd64
+          path: target/pantheon-server-linux-amd64
+
+      - name: Build pantheon-server-arm64
+        if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
+        run: |
+          GOOS=linux GOARCH=arm64 make build module=pantheon-server
+          mv target/pantheon-server target/pantheon-server-linux-arm64
+
+      - name: Upload pantheon-server-arm64
+        if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pantheon-server-linux-arm64
+          path: target/pantheon-server-linux-arm64
+
+  build-rpm:
+    name: Build RPM packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - { name: rockylinux, version: "9", dist: el9 }
+          - { name: almalinux, version: "8", dist: el7 } # 用 alma8 编译 el7
+    container:
+      image: ${{ matrix.os.name }}:${{ matrix.os.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag or use default
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Building version $VERSION from tag"
+          else
+            VERSION="0.0.0"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Building version $VERSION from default"
+          fi
+
+      - name: Install build tools
+        run: |
+          dnf install -y epel-release
+          dnf install -y git rpm-build rpmdevtools make gcc \
+            clang llvm elfutils-libelf-devel kernel-devel upx
+
+      - name: Install Go
+        run: |
+          curl -L https://go.dev/dl/go1.22.0.linux-amd64.tar.gz -o go.tar.gz
+          tar -C /usr/local -xzf go.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+
+      - name: Build application
+        run: |
+          GOOS=linux GOARCH=amd64 make build module=pantheonctl
+          GOOS=linux GOARCH=amd64 make build module=pantheon-server
+
+      - name: Setup rpmbuild directories
+        run: mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: Copy source files
+        run: |
+          cp target/pantheonctl ~/rpmbuild/SOURCES/
+          cp README.md ~/rpmbuild/SOURCES/
+          if [ ! -f LICENSE ]; then
+            echo "MIT License" > ~/rpmbuild/SOURCES/LICENSE
+          else
+            cp LICENSE ~/rpmbuild/SOURCES/
+          fi
+
+      - name: Copy spec file
+        run: cp rpm/pantheon.spec ~/rpmbuild/SPECS/
+
+      - name: Build RPM
+        run: |
+          rpmbuild --define "_version ${{ steps.version.outputs.version }}" -bb ~/rpmbuild/SPECS/pantheon.spec
+
+      - name: Copy RPM packages
+        run: |
+          mkdir -p dist/rpm
+          cp ~/rpmbuild/RPMS/*/*.rpm dist/rpm/
+
+      - name: Upload RPM packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.os.name }}-${{ matrix.os.version }}
+          path: dist/rpm/*.rpm
+
+  build-macos:
+    name: Build macOS binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            goarch: amd64
+            suffix: "-darwin-amd64"
+          - os: macos-14
+            goarch: arm64
+            suffix: "-darwin-arm64"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install UPX
+        run: brew install upx
+
+      - name: Build binaries
+        run: |
+          chmod +x scripts/build.sh
+
+          # Build pantheonctl
+          GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheonctl
+          mv target/pantheonctl target/pantheonctl${{ matrix.suffix }}
+
+          # Build pantheon-server
+          GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheon-server
+          mv target/pantheon-server target/pantheon-server${{ matrix.suffix }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-binaries-${{ matrix.goarch }}
+          path: target/*
+
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-deb, build-rpm, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*darwin*
+            artifacts/**/*linux*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

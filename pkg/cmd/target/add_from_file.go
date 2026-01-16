@@ -65,6 +65,15 @@ func (o *TargetAddFromFileOptions) Run() error {
 		return fmt.Errorf("failed to parse YAML: %s", err)
 	}
 
+	// 如果使用 addresses 简写格式，转换为 targets 数组
+	if len(targets.Addresses) > 0 {
+		for _, addr := range targets.Addresses {
+			targets.Targets = append(targets.Targets, target.TargetItem{
+				Address: addr,
+			})
+		}
+	}
+
 	if err := o.addSingleTarget(targets); err != nil {
 		return err
 	}

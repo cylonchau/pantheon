@@ -1,6 +1,6 @@
 # Pantheon
 
-<p align="center">
+<p>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
   <a href="https://prometheus.io"><img src="https://img.shields.io/badge/Prometheus-Compatible-E6522C?style=flat-square&logo=prometheus" alt="Prometheus"></a>
   <a href="https://victoriametrics.com"><img src="https://img.shields.io/badge/VictoriaMetrics-Compatible-621773?style=flat-square" alt="VictoriaMetrics"></a>

@@ -10,13 +10,15 @@
 
 # Output of the go coverage tool
 *.out
+target
+target/**
 
 # Dependency directories
 # vendor/
 
 # Project specific
 pantheon
-_output/
+target/
 example/
 *.db
 *.db*
