@@ -47,7 +47,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper devscripts dpkg-dev upx build-essential
+          sudo apt-get install -y debhelper devscripts dpkg-dev upx build-essential zip
 
       - name: Update changelog with release content
         run: |
@@ -71,6 +71,7 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 make build module=pantheon-server
           mv target/pantheon-server target/pantheon-server-linux-amd64
+          zip -j target/pantheon-server-linux-amd64.zip target/pantheon-server-linux-amd64
 
       - name: Move packages
         run: |
@@ -90,26 +91,30 @@ jobs:
         with:
           name: deb-${{ matrix.os.name }}-${{ matrix.os.version }}
           path: dist/deb/*.deb
+          retention-days: 1
 
       - name: Upload pantheon-server-amd64
         if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
         uses: actions/upload-artifact@v4
         with:
           name: pantheon-server-linux-amd64
-          path: target/pantheon-server-linux-amd64
+          path: target/pantheon-server-linux-amd64.zip
+          retention-days: 1
 
       - name: Build pantheon-server-arm64
         if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
         run: |
           GOOS=linux GOARCH=arm64 make build module=pantheon-server
           mv target/pantheon-server target/pantheon-server-linux-arm64
+          zip -j target/pantheon-server-linux-arm64.zip target/pantheon-server-linux-arm64
 
       - name: Upload pantheon-server-arm64
         if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
         uses: actions/upload-artifact@v4
         with:
           name: pantheon-server-linux-arm64
-          path: target/pantheon-server-linux-arm64
+          path: target/pantheon-server-linux-arm64.zip
+          retention-days: 1
 
   build-rpm:
     name: Build RPM packages
@@ -184,6 +189,7 @@ jobs:
         with:
           name: rpm-${{ matrix.os.name }}-${{ matrix.os.version }}
           path: dist/rpm/*.rpm
+          retention-days: 1
 
   build-macos:
     name: Build macOS binaries
@@ -215,16 +221,23 @@ jobs:
           # Build pantheonctl
           GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheonctl
           mv target/pantheonctl target/pantheonctl${{ matrix.suffix }}
+          zip -j target/pantheonctl${{ matrix.suffix }}.zip target/pantheonctl${{ matrix.suffix }}
 
           # Build pantheon-server
           GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheon-server
           mv target/pantheon-server target/pantheon-server${{ matrix.suffix }}
+          zip -j target/pantheon-server${{ matrix.suffix }}.zip target/pantheon-server${{ matrix.suffix }}
+
+          # Clean up raw binaries
+          rm target/pantheonctl${{ matrix.suffix }}
+          rm target/pantheon-server${{ matrix.suffix }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-binaries-${{ matrix.goarch }}
-          path: target/*
+          path: target/*.zip
+          retention-days: 1
 
   release:
     name: Create Release
@@ -245,8 +258,7 @@ jobs:
           files: |
             artifacts/**/*.deb
             artifacts/**/*.rpm
-            artifacts/**/*darwin*
-            artifacts/**/*linux*
+            artifacts/**/*.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
