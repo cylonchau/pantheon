@@ -707,7 +707,16 @@ func ListTargetWithSelector(query *query.QueryWithLabel) (results []TargetList, 
 		uniqueKey := hex.EncodeToString(md5.New().Sum([]byte(fmt.Sprintf("%s://%s%s?%s", target.Schema, target.Address, target.MetricPath, paramsString))))
 
 		var targetResult TargetList
-		if target.BearerToken != "" || target.BaseAuth != "" {
+		var dropMetricsVal string
+		hasDropMetrics := false
+		if labels, exists := labelsMap[int(target.ID)]; exists {
+			dropMetricsVal = labels["drop_metrics"]
+			if dropMetricsVal != "" {
+				hasDropMetrics = true
+			}
+		}
+
+		if target.BearerToken != "" || target.BaseAuth != "" || hasDropMetrics {
 			proxyParsedURL := parseConfigURL(config.CONFIG.ProxyAddress)
 
 			targetResult = TargetList{
@@ -719,6 +728,9 @@ func ListTargetWithSelector(query *query.QueryWithLabel) (results []TargetList, 
 					"__metrics_path__":    proxyParsedURL.Path,
 					"__scheme__":          proxyParsedURL.Scheme,
 				},
+			}
+			if hasDropMetrics {
+				targetResult.Labels["__param_drop"] = dropMetricsVal
 			}
 		} else {
 			// 创建新 TargetList

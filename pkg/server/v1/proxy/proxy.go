@@ -1,11 +1,16 @@
 package proxy
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -50,6 +55,7 @@ func (p *ProxyHanderV1) proxy(c *gin.Context) {
 	base := c.Query("base")
 	bearer := c.Query("bearer")
 	path := c.Query("path")
+	dropPattern := c.Query("drop")
 
 	// 验证必需的参数
 	if schema == "" || host == "" || port == "" {
@@ -99,6 +105,26 @@ func (p *ProxyHanderV1) proxy(c *gin.Context) {
 	fmt.Println(targetURL)
 	// 创建反向代理
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+	if dropPattern != "" {
+		proxy.ModifyResponse = func(resp *http.Response) error {
+			if resp.StatusCode != http.StatusOK {
+				return nil
+			}
+
+			bodyBytes, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+			resp.Body.Close()
+
+			filteredBytes := filterMetrics(bodyBytes, dropPattern)
+
+			resp.Body = ioutil.NopCloser(bytes.NewReader(filteredBytes))
+			resp.ContentLength = int64(len(filteredBytes))
+			resp.Header.Set("Content-Length", strconv.Itoa(len(filteredBytes)))
+			return nil
+		}
+	}
 	// 设置超时
 
 	proxy.Transport = http.Client{
@@ -150,4 +176,55 @@ func (p *ProxyHanderV1) proxy(c *gin.Context) {
 		c.Request.UserAgent(),
 		duration,
 	)
+}
+
+func filterMetrics(rawMetrics []byte, dropPattern string) []byte {
+	if dropPattern == "" {
+		return rawMetrics
+	}
+	re, err := regexp.Compile(dropPattern)
+	if err != nil {
+		klog.Errorf("Invalid drop regex pattern: %s, error: %v", dropPattern, err)
+		return rawMetrics
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(rawMetrics))
+	var buf bytes.Buffer
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// 1. Check if comment/metadata line
+		if strings.HasPrefix(line, "#") {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "# HELP") || strings.HasPrefix(trimmed, "# TYPE") {
+				parts := strings.Fields(trimmed)
+				if len(parts) >= 3 {
+					metricName := parts[2]
+					if re.MatchString(metricName) {
+						continue // drop metadata for this metric
+					}
+				}
+			}
+			buf.WriteString(line + "\n")
+			continue
+		}
+
+		// 2. Extract metric name
+		idx := strings.IndexAny(line, "{ \t")
+		var metricName string
+		if idx == -1 {
+			metricName = line
+		} else {
+			metricName = line[:idx]
+		}
+
+		// 3. Drop if it matches regex
+		if re.MatchString(metricName) {
+			continue
+		}
+		buf.WriteString(line + "\n")
+	}
+
+	return buf.Bytes()
 }
