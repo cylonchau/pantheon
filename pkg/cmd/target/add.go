@@ -31,6 +31,9 @@ var (
 
 		# To attach multiple param to the target (for blackbox).
 		pantheonctl target add --address localhost:9115 --labels dc=prd-190,module=a04-ws --params target=google.com,module=http_2xx --selector prom=fed
+
+		# Add a target with metric dropping option
+		pantheonctl target add --address 127.0.0.1:9090 --drop-metrics "go_.*;process_.*" --selector prom=fed
 	`))
 )
 
@@ -45,6 +48,7 @@ type TargetAddOptions struct {
 	LabelsString    string
 	SelectorsString string
 	ParamsString    string
+	DropMetrics     string
 	Auth            TargetAuth
 }
 
@@ -91,6 +95,7 @@ func newCmdTargetAdd() *cobra.Command {
 	addCmd.Flags().StringVar(&o.LabelsString, "labels", "", "Comma-separated key=value pairs for labels.")
 	addCmd.Flags().StringVar(&o.SelectorsString, "selector", "", "Comma-separated key=value pairs for instance selectors. This is required.")
 	addCmd.Flags().StringVar(&o.ParamsString, "params", "", "Comma-separated key=value pairs for target paramters. This is optional.")
+	addCmd.Flags().StringVar(&o.DropMetrics, "drop-metrics", "", "Specify metrics regex to drop during proxy collection. This is optional.")
 	addCmd.Flags().StringVar(&o.Auth.Base, "auth-base", "", "Specify the base auth of the target. This is optional.")
 	addCmd.Flags().StringVar(&o.Auth.BearerToken, "auth-bearer", "", "Specify the bearer token of the target. This is optional.")
 	addCmd.MarkFlagRequired("address")
@@ -140,7 +145,7 @@ func (o *TargetAddOptions) Complete(cmd *cobra.Command) error {
 
 func (o *TargetAddOptions) Validate(cmd *cobra.Command, args []string) error {
 	// Define pattern for valid keys (letters, numbers, hyphen, starting with a letter)
-	keyPattern := "^[a-zA-Z][a-zA-Z0-9-]*$"
+	keyPattern := "^[a-zA-Z][a-zA-Z0-9_-]*$"
 
 	// Validate labels and selectors for key=value format and proper key
 	if err := validateKeyValuePairs(o.Labels, keyPattern); err != nil {
@@ -161,6 +166,11 @@ func (o *TargetAddOptions) Run(args []string) error {
 	}
 
 	// Prepare the request body
+	labelsMap := convertToRequestType(o.Labels)
+	if o.DropMetrics != "" {
+		labelsMap["drop_metrics"] = o.DropMetrics
+	}
+
 	targetQuery := target.Target{
 		Targets: []target.TargetItem{
 			{
@@ -172,7 +182,7 @@ func (o *TargetAddOptions) Run(args []string) error {
 					Base:        o.Auth.Base,
 					BearerToken: o.Auth.BearerToken,
 				},
-				Labels: convertToRequestType(o.Labels),
+				Labels: labelsMap,
 				Params: convertToRequestType(o.Params),
 			},
 		},
