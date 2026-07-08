@@ -17,10 +17,7 @@ func (t *TargetHanderV1) RegisterTargetAPI(g *gin.RouterGroup) {
 	targetGroup.GET("/:id", t.getTargetOne)
 	targetGroup.PUT("", t.createTargets)
 	targetGroup.POST("/:id", t.changeTargetWithID)
-	targetGroup.DELETE("", t.deleteTarget)
-	targetGroup.DELETE("/name/:name", t.deleteTargetWithName)
 	targetGroup.DELETE("/:id", t.deleteTargetWithID)
-	targetGroup.DELETE("/label/:key/:value", t.deleteTargetWithLabel)
 	targetGroup.DELETE("/clean", t.cleanDeletedTargets)
 }
 
@@ -132,58 +129,7 @@ func (t *TargetHanderV1) createTargets(c *gin.Context) {
 	query.SuccessResponse(c, query.OK, nil)
 }
 
-// createTargets godoc
-// @Summary Create prometheus target.
-// @Description Create prometheus target.
-// @Tags Targets
-// @Accept json
-// @Produce json
-// @Param query body target.Target false "body"
-// @securityDefinitions.apikey BearerAuth
-// @Success 200 {object} interface{}
-// @Router /ph/v1/targets [DELETE]
-func (t *TargetHanderV1) deleteTarget(c *gin.Context) {
-	// 1. 获取参数和参数校验
-	var enconterError error
-	targetQuery := &target.Target{}
 
-	if enconterError = c.Bind(targetQuery); enconterError != nil {
-		query.API500Response(c, enconterError)
-		return
-	}
-	//if labels, enconterError := model.GetLabelsWithLabels(targetQuery.Labels); enconterError == nil {
-	if enconterError := model.DeleteTargets(targetQuery); enconterError != nil {
-		query.APIResponse(c, enconterError, nil)
-		return
-	}
-	//}
-	query.SuccessResponse(c, query.OK, nil)
-}
-
-// deleteInstanceWithName godoc
-// @Summary Remove prometheus target with name.
-// @Description Remove prometheus target with name.
-// @Tags Targets
-// @Accept x-www-form-urlencoded
-// @Param name path string true "target name"
-// @securityDefinitions.apikey BearerAuth
-// @Success 200 {object} interface{}
-// @Router /ph/v1/targets/name/{name} [DELETE]
-func (t *TargetHanderV1) deleteTargetWithName(c *gin.Context) {
-	// 1. 获取参数和参数校验
-	var enconterError error
-	targetQuery := &query.QueryWithName{}
-
-	if enconterError = c.ShouldBindUri(targetQuery); enconterError != nil {
-		query.API400Response(c, enconterError)
-		return
-	}
-	if enconterError = model.DeleteTargetWithName(targetQuery.Name); enconterError != nil {
-		query.API400Response(c, enconterError)
-		return
-	}
-	query.SuccessResponse(c, query.OK, nil)
-}
 
 // deleteTargetWithID godoc
 // @Summary Remove prometheus target with target id.
@@ -259,34 +205,5 @@ func (t *TargetHanderV1) changeTargetWithID(c *gin.Context) {
 		return
 	}
 
-	query.SuccessResponse(c, query.OK, nil)
-}
-
-// deleteInstanceWithName godoc
-// @Summary Remove prometheus target with name.
-// @Description Remove target instance with name.
-// @Tags Targets
-// @Accept x-www-form-urlencoded
-// @Param name path string true "target name"
-// @securityDefinitions.apikey BearerAuth
-// @Success 200 {object} interface{}
-// @Router /ph/v1/targets/selector/{key}/{value} [DELETE]
-func (t *TargetHanderV1) deleteTargetWithLabel(c *gin.Context) {
-	// 1. 获取参数和参数校验
-	var enconterError error
-	targetQuery := &query.QueryWithLabel{}
-	if enconterError = c.ShouldBindUri(targetQuery); enconterError != nil {
-		query.API400Response(c, enconterError)
-		return
-	}
-
-	if enconterError = c.ShouldBindUri(targetQuery); enconterError != nil {
-		query.API400Response(c, enconterError)
-		return
-	}
-	if enconterError := model.DeleteTargetWithLabel(targetQuery.Key, targetQuery.Value); enconterError != nil {
-		query.RawSuccessResponse(c, enconterError)
-		return
-	}
 	query.SuccessResponse(c, query.OK, nil)
 }

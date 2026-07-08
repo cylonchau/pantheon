@@ -11,14 +11,7 @@ var APIInterfaces = map[string]APIInterface{
 		Path:   "/ph/v1/targets",
 		Method: "PUT",
 	},
-	"DeleteTargetWithLabel": {
-		Path:   "/api/v1/targets/label",
-		Method: "DELETE",
-	},
-	"DeleteTargetWithAddress": {
-		Path:   "/ph/v1/targets/name",
-		Method: "DELETE",
-	},
+
 	"DeleteTargetWithID": {
 		Path:   "/ph/v1/targets",
 		Method: "DELETE",
