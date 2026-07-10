@@ -40,4 +40,16 @@ var APIInterfaces = map[string]APIInterface{
 		Path:   "/ph/v1/targets/clean",
 		Method: "DELETE",
 	},
+	"AddMonitor": {
+		Path:   "/ph/v1/monitors",
+		Method: "PUT",
+	},
+	"ListMonitors": {
+		Path:   "/ph/v1/monitors",
+		Method: "GET",
+	},
+	"DeleteMonitor": {
+		Path:   "/ph/v1/monitors",
+		Method: "DELETE",
+	},
 }

@@ -3,6 +3,8 @@ package migration
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -99,6 +101,10 @@ func upgradeMigrate(dbInterface *gorm.DB) (enconterError error) {
 		return
 	}
 
+	if enconterError = dbInterface.AutoMigrate(&model.MonitorRule{}); enconterError != nil {
+		return
+	}
+
 	return nil
 }
 
@@ -123,11 +129,35 @@ func autoMigrate(dbInterface *gorm.DB) (enconterError error) {
 			return
 		}
 	}
+	if !dbInterface.Migrator().HasTable(&model.MonitorRule{}) {
+		if enconterError = dbInterface.AutoMigrate(&model.MonitorRule{}); enconterError != nil {
+			return
+		}
+	}
 	return nil
 }
 
 func SQLite() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(config.CONFIG.SQLite.File+".db"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	// Use the config path as-is; only append .db if no extension is present.
+	rawPath := config.CONFIG.SQLite.File
+	if filepath.Ext(rawPath) == "" {
+		rawPath = rawPath + ".db"
+	}
+
+	// Resolve to absolute path so the file: URI is valid on both Windows and Linux/WSL.
+	absPath, err := filepath.Abs(rawPath)
+	if err != nil {
+		return nil, err
+	}
+	absPath = filepath.ToSlash(absPath)
+
+	if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
+		return nil, err
+	}
+
+	// WAL mode + nolock=1 bypasses POSIX flock() unsupported on Windows DrvFS / WSL /mnt mounts.
+	dsn := "file:" + absPath + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&nolock=1"
+	return gorm.Open(sqlite.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 }
 
 func MySQL() (*gorm.DB, error) {

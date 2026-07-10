@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
@@ -21,7 +22,7 @@ func newCmdListClusters() *cobra.Command {
 
 // ListClusters prints all clusters in the configuration
 func ListClusters() error {
-	file := GetConfigPath() + "/" + "config"
+	file := filepath.Join(GetConfigPath(), "config")
 	config, err := readConfig(file)
 	if err != nil {
 		return err

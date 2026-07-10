@@ -1,6 +1,10 @@
 package push
 
 import (
+	"io"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/cylonchau/pantheon/pkg/version"
@@ -54,6 +58,27 @@ func TestPushOptions_Complete(t *testing.T) {
 			// client_ip might be empty if network fails, but key shouldn't crash
 		})
 	}
+}
+
+func TestPushOptions_Complete_Network(t *testing.T) {
+	// Start a local TCP listener to verify local IP resolution on dial success.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	assert.NoError(t, err)
+	defer ln.Close()
+
+	go func() {
+		conn, err := ln.Accept()
+		if err == nil {
+			conn.Close()
+		}
+	}()
+
+	o := NewPushOptions()
+	o.Address = ln.Addr().String()
+
+	err = o.Complete(nil)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, o.ParsedLabels["client_ip"])
 }
 
 func TestPushOptions_Validate(t *testing.T) {
@@ -132,4 +157,110 @@ func Test_parseMetricString(t *testing.T) {
 			assert.Equal(t, tt.wantType, typ)
 		})
 	}
+}
+
+func TestPushOptions_Run(t *testing.T) {
+	// Success server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	// Error server
+	errorServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer errorServer.Close()
+
+	t.Run("Success with gauge and counter", func(t *testing.T) {
+		o := NewPushOptions()
+		o.Address = server.URL
+		o.JobName = "test_job"
+		o.Metrics = []string{"cpu_usage=0.8", "request_count=100:counter"}
+		o.ParsedLabels = map[string]string{"env": "prod"}
+		err := o.Run()
+		assert.NoError(t, err)
+	})
+
+	t.Run("Error parseMetricString failure", func(t *testing.T) {
+		o := NewPushOptions()
+		o.Address = server.URL
+		o.JobName = "test_job"
+		o.Metrics = []string{"invalid_metric"}
+		err := o.Run()
+		assert.Error(t, err)
+	})
+
+	t.Run("Error unsupported metric type", func(t *testing.T) {
+		o := NewPushOptions()
+		o.Address = server.URL
+		o.JobName = "test_job"
+		o.Metrics = []string{"cpu=0.8:histogram"}
+		err := o.Run()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "unsupported metric type")
+	})
+
+	t.Run("Error pusher.Push failure", func(t *testing.T) {
+		o := NewPushOptions()
+		o.Address = errorServer.URL
+		o.JobName = "test_job"
+		o.Metrics = []string{"cpu_usage=0.8"}
+		err := o.Run()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to push metrics")
+	})
+}
+
+func TestNewCmdPush(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	t.Run("Valid Execution", func(t *testing.T) {
+		cmd := NewCmdPush()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs([]string{"my_job", "--address", server.URL, "--metric", "cpu_usage=0.8"})
+		err := cmd.Execute()
+		assert.NoError(t, err)
+	})
+
+	t.Run("Missing argument job_name", func(t *testing.T) {
+		cmd := NewCmdPush()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs([]string{"--address", server.URL})
+		err := cmd.Execute()
+		assert.Error(t, err)
+	})
+
+	t.Run("Missing required flag address", func(t *testing.T) {
+		cmd := NewCmdPush()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs([]string{"my_job"})
+		err := cmd.Execute()
+		assert.Error(t, err)
+	})
+
+	t.Run("Complete error invalid label", func(t *testing.T) {
+		cmd := NewCmdPush()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs([]string{"my_job", "--address", server.URL, "--label", "invalid"})
+		err := cmd.Execute()
+		assert.Error(t, err)
+	})
+
+	t.Run("Validate error missing metric", func(t *testing.T) {
+		cmd := NewCmdPush()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs([]string{"my_job", "--address", server.URL})
+		err := cmd.Execute()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "at least one --metric is required")
+	})
 }

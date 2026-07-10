@@ -3,9 +3,10 @@ namespace: monitoring
 
 # Common labels for all resources
 labels:
-  app: pantheon-server
-  environment: production
-  version: v1.0
+  app: pantheon
+  extraLabels:
+    environment: production
+    version: v1.0
 
 # Node selector configuration
 nodeSelector:
@@ -14,66 +15,103 @@ nodeSelector:
   # Node selector key-value pairs
   selectors:
     srv-role: mgmt
-# Replica count for the deployment
-replicaCount: 1
-
-# Image configuration for the container
-image:
-  repository: cylonchau/pantheon-server
-  tag: "v1.7.2"
-  pullPolicy: Always
-
-# Service configuration
-service:
-  enabled: false
-  annotations: {}
-  type: ClusterIP
-  port: 80
-  targetPort: 8899
-
-# Ingress configuration
-ingress:
-  # Whether to enable ingress
-  enabled: true
-  # Host for the ingress
-  host: ph-new.github.com
-  # Path for the ingress
-  path: /
-  # Ingress version (v1 or v1beta1)
-  version: v1beta1
-  # Ingress class configuration
-  class: nginx-ingress-mgmt
-  # Whether to enable TLS
-  tls:
-    enabled: true
-    # Secret name for TLS
-    secretName: github.com
 
 # Kubernetes version (e.g., "1.18", "1.19", "1.20")
 k8s:
   version: "1.16"
-# Resource requests and limits
-resources:
-  requests:
-    memory: "512Mi"
-    cpu: ".5"
-  limits:
-    memory: "2048Mi"
-    cpu: "2"
 
-# Application configuration
+# Server configuration
+server:
+  enabled: true
+  # Replica count for the server deployment
+  replicaCount: 1
+
+  # Image configuration for the server container
+  image:
+    repository: cylonchau/pantheon-server
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  args:
+    - "--sql-driver=sqlite"
+    - "--config"
+    - "/etc/pantheon/config.toml"
+    - "-v"
+    - "10"
+
+  # Service configuration for the server
+  service:
+    enabled: true
+    annotations: {}
+    type: ClusterIP
+    port: 80
+    targetPort: 8899
+
+  # Ingress configuration for the server
+  ingress:
+    # Whether to enable ingress
+    enabled: false
+    # Host for the ingress
+    host: ph-new.github.com
+    # Path for the ingress
+    path: /
+    # Ingress version (v1 or v1beta1)
+    version: v1beta1
+    # Ingress class configuration
+    class: nginx-ingress-mgmt
+    # Whether to enable TLS
+    tls:
+      enabled: true
+      # Secret name for TLS
+      secretName: github.com
+
+  # Resource requests and limits for the server
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: ".5"
+    limits:
+      memory: "2048Mi"
+      cpu: "2"
+
+# Controller configuration
+controller:
+  enabled: true
+  # Replica count for the controller deployment
+  replicaCount: 1
+
+  # Image configuration for the controller container
+  image:
+    repository: cylonchau/pantheon-controller
+    tag: "v1.0"
+    pullPolicy: Always
+
+  serverURL: "" # Leave empty to auto-detect the service name (e.g. http://pantheon-server:8899)
+  clusterName: "k8s-prod-china"
+  syncInterval: "30s"
+  authToken: ""
+
+  # Resource requests and limits for the controller
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Application configuration (internal properties of Pantheon Server)
 config:
   appname: "pantheon-server"
   port: 8899
   address: "0.0.0.0"
-  database_driver: "mysql"
-  proxy_address: "https://10.0.0.1"
+  database_driver: "sqlite"
+  proxy_address: "http://localhost:8899/ph/v1/proxy"
   proxy_timeout: 30
   mysql:
     ip: "10.190.9.180"
     port: 3306
     user: "cmp"
     password: ""
-    database: "cmp-new"
+    database: "cmp"
     max_open_connection: 100
     max_idle_connection: 100

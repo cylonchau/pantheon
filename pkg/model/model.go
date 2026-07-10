@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -88,7 +90,32 @@ func InitDB(driver string) error {
 		}
 	case "sqlite":
 		newLogger := KlogLogger{logLevel: logger.Info}
-		if DB, enconterError = gorm.Open(sqlite.Open(config.CONFIG.SQLite.File+".db"), &gorm.Config{Logger: newLogger}); enconterError == nil {
+
+		// Use the config path as-is (user specifies full filename incl. extension).
+		// Fall back to appending .db only if the file has no extension.
+		rawPath := config.CONFIG.SQLite.File
+		if filepath.Ext(rawPath) == "" {
+			rawPath = rawPath + ".db"
+		}
+
+		// Resolve to an absolute path so that the file: URI is always valid on
+		// both Windows and Linux/WSL.
+		absPath, err := filepath.Abs(rawPath)
+		if err != nil {
+			return err
+		}
+		// Convert backslashes to forward slashes for the SQLite URI (required on Windows).
+		absPath = filepath.ToSlash(absPath)
+
+		if err := os.MkdirAll(filepath.Dir(absPath), 0755); err != nil {
+			return err
+		}
+
+		// Use WAL mode + busy_timeout for better concurrency.
+		// nolock=1 bypasses POSIX flock() which is unsupported on Windows DrvFS / WSL /mnt mounts.
+		dsn := "file:" + absPath + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&nolock=1"
+		klog.V(4).Infof("SQLite DSN: %s", dsn)
+		if DB, enconterError = gorm.Open(sqlite.Open(dsn), &gorm.Config{Logger: newLogger}); enconterError == nil {
 			if dbConn, enconterError = DB.DB(); enconterError == nil {
 				dbConn.SetMaxOpenConns(config.CONFIG.SQLite.MaxOpenConnection)
 				dbConn.SetMaxIdleConns(config.CONFIG.SQLite.MaxIdleConnection)

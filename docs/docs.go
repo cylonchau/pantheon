@@ -15,6 +15,177 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/ph/v1/monitors": {
+            "get": {
+                "description": "Get all active monitor rules",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "monitor"
+                ],
+                "summary": "List monitor rules",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_model.MonitorRule"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Add a new monitor rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "monitor"
+                ],
+                "summary": "Create monitor rule",
+                "parameters": [
+                    {
+                        "description": "Monitor Rule configuration",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/ph/v1/monitors/{id}": {
+            "post": {
+                "description": "Modify an existing monitor rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "monitor"
+                ],
+                "summary": "Update monitor rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Monitor Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Monitor Rule configuration",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a monitor rule by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "monitor"
+                ],
+                "summary": "Delete monitor rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Monitor Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ph/v1/proxy": {
             "get": {
                 "description": "This endpoint proxies requests to another server.",
@@ -126,7 +297,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector"
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.QueryEditSelector"
                         }
                     }
                 ],
@@ -134,13 +305,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response"
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response"
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response"
                         }
                     }
                 }
@@ -165,38 +336,7 @@ const docTemplate = `{
                         "name": "query",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Create prometheus target.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Targets"
-                ],
-                "summary": "Create prometheus target.",
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "query",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target"
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_target.Target"
                         }
                     }
                 ],
@@ -269,35 +409,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/ph/v1/targets/name/{name}": {
-            "delete": {
-                "description": "Remove prometheus target with name.",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "tags": [
-                    "Targets"
-                ],
-                "summary": "Remove prometheus target with name.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "target name",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            }
-        },
         "/ph/v1/targets/selector/{key}/{value}": {
             "get": {
                 "description": "List target with instance labels",
@@ -323,33 +434,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "selector value name",
                         "name": "value",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Remove target instance with name.",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "tags": [
-                    "Targets"
-                ],
-                "summary": "Remove prometheus target with name.",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "target name",
-                        "name": "name",
                         "in": "path",
                         "required": true
                     }
@@ -418,7 +502,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetChg"
+                            "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetChg"
                         }
                     }
                 ],
@@ -500,7 +584,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta": {
+        "github_com_cylonchau_pantheon_pkg_api_meta_v1.TypeMeta": {
             "type": "object",
             "properties": {
                 "kind": {
@@ -508,7 +592,50 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector": {
+        "github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq": {
+            "type": "object",
+            "required": [
+                "name",
+                "namespace",
+                "port_name",
+                "selector",
+                "type"
+            ],
+            "properties": {
+                "drop_metrics": {
+                    "description": "Optional regex to drop metrics",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Comma-separated: env=prod,owner=sre (optional)",
+                    "type": "string"
+                },
+                "metric_path": {
+                    "description": "e.g. /metrics (optional, defaults to /metrics)",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "port_name": {
+                    "type": "string"
+                },
+                "selector": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "pod",
+                        "service"
+                    ]
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_api_query.QueryEditSelector": {
             "type": "object",
             "required": [
                 "new_key",
@@ -535,7 +662,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_query.Response": {
+        "github_com_cylonchau_pantheon_pkg_api_query.Response": {
             "type": "object",
             "properties": {
                 "code": {
@@ -547,14 +674,20 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_target.Target": {
+        "github_com_cylonchau_pantheon_pkg_api_target.Target": {
             "type": "object",
             "required": [
                 "selectors"
             ],
             "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "kind": {
-                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta"
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_meta_v1.TypeMeta"
                 },
                 "selectors": {
                     "type": "object",
@@ -565,12 +698,12 @@ const docTemplate = `{
                 "targets": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetItem"
+                        "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetItem"
                     }
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth": {
+        "github_com_cylonchau_pantheon_pkg_api_target.TargetAuth": {
             "type": "object",
             "properties": {
                 "base": {
@@ -581,14 +714,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_target.TargetChg": {
+        "github_com_cylonchau_pantheon_pkg_api_target.TargetChg": {
             "type": "object",
             "properties": {
                 "address": {
                     "type": "string"
                 },
                 "auth": {
-                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth"
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetAuth"
                 },
                 "metric_path": {
                     "type": "string"
@@ -601,7 +734,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cylonchau_pantheon_pkg_apis_target.TargetItem": {
+        "github_com_cylonchau_pantheon_pkg_api_target.TargetItem": {
             "type": "object",
             "required": [
                 "address"
@@ -611,7 +744,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "auth": {
-                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth"
+                    "$ref": "#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetAuth"
                 },
                 "labels": {
                     "type": "object",
@@ -633,6 +766,45 @@ const docTemplate = `{
                 },
                 "scrape_timeout": {
                     "type": "integer"
+                }
+            }
+        },
+        "github_com_cylonchau_pantheon_pkg_model.MonitorRule": {
+            "type": "object",
+            "properties": {
+                "drop_metrics": {
+                    "description": "Regex to drop metrics",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "labels": {
+                    "description": "Labels to inject: k1=v1,k2=v2",
+                    "type": "string"
+                },
+                "metric_path": {
+                    "description": "e.g. /metrics",
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "K8s namespace",
+                    "type": "string"
+                },
+                "port_name": {
+                    "description": "Target port name or port number",
+                    "type": "string"
+                },
+                "selector": {
+                    "description": "Comma-separated app=portal,env=prod",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"pod\" or \"service\"",
+                    "type": "string"
                 }
             }
         },
@@ -675,11 +847,11 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "0.0.9",
-	Host:             "localhost:8899",
+	Version:          "v0.0.0-dev",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
-	Title:            "Prometheus Hub API",
+	Title:            "Pantheon server",
 	Description:      "Prometheus hub, distrubed prometheus targent manager.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
