@@ -70,7 +70,7 @@ jobs:
         if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
         run: |
           GOOS=linux GOARCH=amd64 make build module=pantheon-server
-          mv target/pantheon-server target/pantheon-server-linux-amd64
+          mv target/bin/pantheon-server* target/pantheon-server-linux-amd64
           zip -j target/pantheon-server-linux-amd64.zip target/pantheon-server-linux-amd64
 
       - name: Move packages
@@ -105,7 +105,7 @@ jobs:
         if: matrix.os.name == 'ubuntu' && matrix.os.version == '22.04'
         run: |
           GOOS=linux GOARCH=arm64 make build module=pantheon-server
-          mv target/pantheon-server target/pantheon-server-linux-arm64
+          mv target/bin/pantheon-server* target/pantheon-server-linux-arm64
           zip -j target/pantheon-server-linux-arm64.zip target/pantheon-server-linux-arm64
 
       - name: Upload pantheon-server-arm64
@@ -164,7 +164,7 @@ jobs:
 
       - name: Copy source files
         run: |
-          cp target/pantheonctl ~/rpmbuild/SOURCES/
+          cp target/bin/pantheonctl ~/rpmbuild/SOURCES/
           cp README.md ~/rpmbuild/SOURCES/
           if [ ! -f LICENSE ]; then
             echo "MIT License" > ~/rpmbuild/SOURCES/LICENSE
@@ -220,12 +220,12 @@ jobs:
 
           # Build pantheonctl
           GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheonctl
-          mv target/pantheonctl target/pantheonctl${{ matrix.suffix }}
+          mv target/bin/pantheonctl* target/pantheonctl${{ matrix.suffix }}
           zip -j target/pantheonctl${{ matrix.suffix }}.zip target/pantheonctl${{ matrix.suffix }}
 
           # Build pantheon-server
           GOOS=darwin GOARCH=${{ matrix.goarch }} make build module=pantheon-server
-          mv target/pantheon-server target/pantheon-server${{ matrix.suffix }}
+          mv target/bin/pantheon-server* target/pantheon-server${{ matrix.suffix }}
           zip -j target/pantheon-server${{ matrix.suffix }}.zip target/pantheon-server${{ matrix.suffix }}
 
           # Clean up raw binaries

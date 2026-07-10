@@ -5,7 +5,7 @@ Summary: Pantheon - Prometheus target manager with HTTP SD and universal exporte
 Group: monitoring
 License: Apache License 2.0
 URL: https://github.com/cylonchau/pantheon
-Source0: target/pantheonctl
+Source0: target/bin/pantheonctl
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 
 %description

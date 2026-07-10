@@ -1,2 +1,2 @@
-target/pantheonctl usr/bin
+target/bin/pantheonctl usr/bin
 README.md usr/share/doc/pantheonctl
