@@ -1,0 +1,51 @@
+{{- if .Values.server.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.labels.app }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.labels.app }}
+    {{- toYaml .Values.labels.extraLabels | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}
+        {{- toYaml .Values.labels.extraLabels | nindent 8 }}
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        {{- range $key, $value := .Values.nodeSelector.selectors }}
+          {{ $key }}: {{ $value }}                     # Node selector for pod placement
+          {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.labels.app }}-container
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          {{- if .Values.server.args }}
+          args:
+            {{- toYaml .Values.server.args | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: {{ .Values.labels.app }}-config-volume
+              mountPath: /etc/pantheon
+          ports:
+            - containerPort: {{ .Values.server.service.targetPort }}
+          resources:
+            requests:
+              memory: {{ .Values.server.resources.requests.memory }}
+              cpu: {{ .Values.server.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.server.resources.limits.memory }}
+              cpu: {{ .Values.server.resources.limits.cpu }}
+      volumes:
+        - name: {{ .Values.labels.app }}-config-volume
+          configMap:
+            name: {{ .Values.labels.app }}-config
+{{- end }}

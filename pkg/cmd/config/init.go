@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -34,7 +35,7 @@ func InitConfig() error {
 		return err
 	}
 
-	file := path + "/config"
+	file := filepath.Join(path, "config")
 	err = os.WriteFile(file, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to create config file: %v", err)

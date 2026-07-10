@@ -6,6 +6,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/cylonchau/pantheon/docs"
+	v1Monitor "github.com/cylonchau/pantheon/pkg/server/v1/monitor"
 	v1Proxy "github.com/cylonchau/pantheon/pkg/server/v1/proxy"
 	v1Selector "github.com/cylonchau/pantheon/pkg/server/v1/selector"
 	v1Target "github.com/cylonchau/pantheon/pkg/server/v1/target"
@@ -31,6 +32,9 @@ func RegisteredRouter(e *gin.Engine) {
 
 	proxyHanderV1 := &v1Proxy.ProxyHanderV1{}
 	proxyHanderV1.RegisterProxyAPI(phv1Group)
+
+	monitorHandlerV1 := &v1Monitor.MonitorHandlerV1{}
+	monitorHandlerV1.RegisterMonitorAPI(phv1Group)
 
 	targetHanderV2 := &v2Target.TargetHanderV2{}
 	targetHanderV2.RegisterTargetAPI(phv2Group)

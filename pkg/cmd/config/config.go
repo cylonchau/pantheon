@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -42,7 +43,11 @@ func GetConfigPath() string {
 	if path := os.Getenv("PANTHEONCONFIG"); path != "" {
 		return path
 	}
-	return os.ExpandEnv("$HOME/.pantheon")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ".pantheon" // Fallback to current directory if home dir is not found
+	}
+	return filepath.Join(home, ".pantheon")
 }
 
 func readConfig(path string) (*config.Config, error) {
@@ -73,7 +78,7 @@ func writeConfig(path string, config *config.Config) error {
 
 // GetClusterConfig retrieves the cluster configuration for the current context
 func GetClusterConfig() (*config.ClusterConfig, error) {
-	file := GetConfigPath() + "/" + "config"
+	file := filepath.Join(GetConfigPath(), "config")
 	config, err := readConfig(file)
 	if err != nil {
 		return nil, err

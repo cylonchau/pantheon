@@ -716,9 +716,15 @@ func ListTargetWithSelector(query *query.QueryWithLabel) (results []TargetList, 
 			}
 		}
 
-		if target.BearerToken != "" || target.BaseAuth != "" || hasDropMetrics {
-			proxyParsedURL := parseConfigURL(config.CONFIG.ProxyAddress)
+		useProxy := false
+		if config.CONFIG.ProxyAddress != "" {
+			useProxy = true
+		} else if target.BearerToken != "" || target.BaseAuth != "" || hasDropMetrics {
+			useProxy = true
+		}
 
+		if useProxy {
+			proxyParsedURL := parseConfigURL(config.CONFIG.ProxyAddress)
 			targetResult = TargetList{
 				Targets: []string{proxyParsedURL.Host},
 				Labels: map[string]string{
@@ -776,8 +782,10 @@ func ListTargetWithSelector(query *query.QueryWithLabel) (results []TargetList, 
 			if target.BearerToken != "" && target.BaseAuth != "" {
 				delete(targetResult.Labels, "__param_base")
 			}
+		}
 
-			// 处理 schema 和 host 和 path
+		// 处理 schema 和 host 和 path
+		if useProxy {
 			proxyHostPattern := `^(?P<host>[\w.-]+|\d{1,3}(\.\d{1,3}){3}):(?P<port>\d{1,5})$`
 			proxyHostRe := regexp.MustCompile(proxyHostPattern)
 			if proxyHostRe.MatchString(target.Address) {

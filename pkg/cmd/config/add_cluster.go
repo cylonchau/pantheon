@@ -1,6 +1,8 @@
 package config
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cylonchau/pantheon/pkg/api/config"
@@ -33,7 +35,7 @@ func newCmdAddCluster() *cobra.Command {
 
 // AddCluster adds a new cluster to the configuration file
 func AddCluster(name, server, baseAuth, bearerToken, ssoToken string) error {
-	file := GetConfigPath() + "/config"
+	file := filepath.Join(GetConfigPath(), "config")
 	configFile, err := readConfig(file)
 	if err != nil {
 		return err

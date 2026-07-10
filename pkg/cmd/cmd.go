@@ -9,6 +9,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/cylonchau/pantheon/pkg/cmd/config"
+	"github.com/cylonchau/pantheon/pkg/cmd/monitor"
 	"github.com/cylonchau/pantheon/pkg/cmd/push"
 	"github.com/cylonchau/pantheon/pkg/cmd/selector"
 	"github.com/cylonchau/pantheon/pkg/cmd/target"
@@ -77,12 +78,14 @@ func NewPantheonctlCommand(o PantheonctlOptions) *cobra.Command {
 	selectorCmd := selector.NewCmdselector()
 	versionCmd := NewCmdVersion()
 	pushCmd := push.NewCmdPush()
+	monitorCmd := monitor.NewCmdMonitor()
 	rootCmd.AddCommand(
 		targetCmd,
 		configCmd,
 		selectorCmd,
 		versionCmd,
 		pushCmd,
+		monitorCmd,
 	)
 	return rootCmd
 }

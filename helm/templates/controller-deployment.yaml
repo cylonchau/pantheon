@@ -1,0 +1,46 @@
+{{- if .Values.controller.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.labels.app }}-controller
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.labels.app }}-controller
+    {{- toYaml .Values.labels.extraLabels | nindent 4 }}
+spec:
+  replicas: {{ .Values.controller.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.app }}-controller
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.app }}-controller
+        {{- toYaml .Values.labels.extraLabels | nindent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.labels.app }}-controller
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        {{- range $key, $value := .Values.nodeSelector.selectors }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: controller
+          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          args:
+            - --pantheon-server={{ .Values.controller.serverURL | default (printf "http://%s:%d" .Values.labels.app (int .Values.config.port)) }}
+            - --cluster-name={{ .Values.controller.clusterName }}
+            - --sync-interval={{ .Values.controller.syncInterval }}
+            {{- if .Values.controller.authToken }}
+            - --auth-token={{ .Values.controller.authToken }}
+            {{- end }}
+          resources:
+            requests:
+              memory: {{ .Values.controller.resources.requests.memory }}
+              cpu: {{ .Values.controller.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.controller.resources.limits.memory }}
+              cpu: {{ .Values.controller.resources.limits.cpu }}
+{{- end }}

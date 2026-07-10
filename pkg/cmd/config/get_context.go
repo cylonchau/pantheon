@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ func newCmdGetContext() *cobra.Command {
 
 // GetContext retrieves the current context from the configuration
 func getContext() error {
-	file := GetConfigPath() + "/" + "config"
+	file := filepath.Join(GetConfigPath(), "config")
 	config, err := readConfig(file)
 	if err != nil {
 		return err

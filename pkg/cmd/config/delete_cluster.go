@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +29,7 @@ func newCmdDeleteCluster() *cobra.Command {
 
 // DeleteCluster removes a cluster from the configuration file
 func DeleteCluster(name string) error {
-	file := GetConfigPath() + "config"
+	file := filepath.Join(GetConfigPath(), "config")
 	configFile, err := readConfig(file)
 	if err != nil {
 		return err

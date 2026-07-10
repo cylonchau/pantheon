@@ -1,11 +1,42 @@
 basePath: /
 definitions:
-  github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta:
+  github_com_cylonchau_pantheon_pkg_api_meta_v1.TypeMeta:
     properties:
       kind:
         type: string
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector:
+  github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq:
+    properties:
+      drop_metrics:
+        description: Optional regex to drop metrics
+        type: string
+      labels:
+        description: 'Comma-separated: env=prod,owner=sre (optional)'
+        type: string
+      metric_path:
+        description: e.g. /metrics (optional, defaults to /metrics)
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      port_name:
+        type: string
+      selector:
+        type: string
+      type:
+        enum:
+        - pod
+        - service
+        type: string
+    required:
+    - name
+    - namespace
+    - port_name
+    - selector
+    - type
+    type: object
+  github_com_cylonchau_pantheon_pkg_api_query.QueryEditSelector:
     properties:
       new_key:
         description: 新键
@@ -25,7 +56,7 @@ definitions:
     - old_key
     - old_value
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_query.Response:
+  github_com_cylonchau_pantheon_pkg_api_query.Response:
     properties:
       code:
         type: integer
@@ -33,34 +64,38 @@ definitions:
       msg:
         type: string
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_target.Target:
+  github_com_cylonchau_pantheon_pkg_api_target.Target:
     properties:
+      addresses:
+        items:
+          type: string
+        type: array
       kind:
-        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_meta_v1.TypeMeta'
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_meta_v1.TypeMeta'
       selectors:
         additionalProperties:
           type: string
         type: object
       targets:
         items:
-          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetItem'
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetItem'
         type: array
     required:
     - selectors
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth:
+  github_com_cylonchau_pantheon_pkg_api_target.TargetAuth:
     properties:
       base:
         type: string
       bearer_token:
         type: string
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_target.TargetChg:
+  github_com_cylonchau_pantheon_pkg_api_target.TargetChg:
     properties:
       address:
         type: string
       auth:
-        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth'
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetAuth'
       metric_path:
         type: string
       scrape_time:
@@ -68,12 +103,12 @@ definitions:
       scrape_timeout:
         type: integer
     type: object
-  github_com_cylonchau_pantheon_pkg_apis_target.TargetItem:
+  github_com_cylonchau_pantheon_pkg_api_target.TargetItem:
     properties:
       address:
         type: string
       auth:
-        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetAuth'
+        $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetAuth'
       labels:
         additionalProperties:
           type: string
@@ -90,6 +125,34 @@ definitions:
         type: integer
     required:
     - address
+    type: object
+  github_com_cylonchau_pantheon_pkg_model.MonitorRule:
+    properties:
+      drop_metrics:
+        description: Regex to drop metrics
+        type: string
+      id:
+        type: integer
+      labels:
+        description: 'Labels to inject: k1=v1,k2=v2'
+        type: string
+      metric_path:
+        description: e.g. /metrics
+        type: string
+      name:
+        type: string
+      namespace:
+        description: K8s namespace
+        type: string
+      port_name:
+        description: Target port name or port number
+        type: string
+      selector:
+        description: Comma-separated app=portal,env=prod
+        type: string
+      type:
+        description: '"pod" or "service"'
+        type: string
     type: object
   github_com_cylonchau_pantheon_pkg_model.TargetRaw:
     properties:
@@ -108,13 +171,125 @@ definitions:
       scrape_timeout:
         type: integer
     type: object
-host: localhost:8899
 info:
   contact: {}
   description: Prometheus hub, distrubed prometheus targent manager.
-  title: Prometheus Hub API
-  version: 0.0.9
+  title: Pantheon server
+  version: v0.0.0-dev
 paths:
+  /ph/v1/monitors:
+    get:
+      consumes:
+      - application/json
+      description: Get all active monitor rules
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_model.MonitorRule'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+      summary: List monitor rules
+      tags:
+      - monitor
+    put:
+      consumes:
+      - application/json
+      description: Add a new monitor rule
+      parameters:
+      - description: Monitor Rule configuration
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+      summary: Create monitor rule
+      tags:
+      - monitor
+  /ph/v1/monitors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a monitor rule by ID
+      parameters:
+      - description: Monitor Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+      summary: Delete monitor rule
+      tags:
+      - monitor
+    post:
+      consumes:
+      - application/json
+      description: Modify an existing monitor rule
+      parameters:
+      - description: Monitor Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Monitor Rule configuration
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_monitor.MonitorRuleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
+      summary: Update monitor rule
+      tags:
+      - monitor
   /ph/v1/proxy:
     get:
       consumes:
@@ -187,42 +362,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.QueryEditSelector'
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.QueryEditSelector'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response'
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_query.Response'
+            $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_query.Response'
       summary: Update selector
       tags:
       - Selectors
   /ph/v1/targets:
-    delete:
-      consumes:
-      - application/json
-      description: Create prometheus target.
-      parameters:
-      - description: body
-        in: body
-        name: query
-        schema:
-          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: object
-      summary: Create prometheus target.
-      tags:
-      - Targets
     put:
       consumes:
       - application/json
@@ -232,7 +387,7 @@ paths:
         in: body
         name: query
         schema:
-          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.Target'
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_target.Target'
       produces:
       - application/json
       responses:
@@ -297,7 +452,7 @@ paths:
         name: target
         required: true
         schema:
-          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_apis_target.TargetChg'
+          $ref: '#/definitions/github_com_cylonchau_pantheon_pkg_api_target.TargetChg'
       responses:
         "200":
           description: OK
@@ -345,44 +500,7 @@ paths:
       summary: List target with instance labels
       tags:
       - Targets
-  /ph/v1/targets/name/{name}:
-    delete:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Remove prometheus target with name.
-      parameters:
-      - description: target name
-        in: path
-        name: name
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: object
-      summary: Remove prometheus target with name.
-      tags:
-      - Targets
   /ph/v1/targets/selector/{key}/{value}:
-    delete:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Remove target instance with name.
-      parameters:
-      - description: target name
-        in: path
-        name: name
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: object
-      summary: Remove prometheus target with name.
-      tags:
-      - Targets
     get:
       consumes:
       - application/json

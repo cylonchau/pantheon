@@ -1,9 +1,9 @@
 # Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+**/*.exe
+**/*.exe~
+**/*.dll
+**/*.so
+**/*.dylib
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,8 +20,8 @@ target/**
 pantheon
 target/
 example/
-*.db
-*.db*
+***/*.db
+**/**.db*
 main
 pantheon1
 pantheon1/**
@@ -65,3 +65,6 @@ rpmbuild/
 
 # Distribution
 /dist/
+**/coverage**
+/hermes
+/hermes/**
